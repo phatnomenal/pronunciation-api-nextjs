@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from '../../config/config.service';
 import OpenAI from 'openai';
 import * as fs from 'fs';
 
@@ -10,13 +10,13 @@ export class OpenaiService {
   private ttsModel: string;
   private ttsVoice: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: AppConfigService) {
     this.openai = new OpenAI({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
+      apiKey: this.configService.openaiApiKey,
     });
-    this.model = this.configService.get<string>('OPENAI_MODEL') || 'whisper-1';
-    this.ttsModel = this.configService.get<string>('OPENAI_TTS_MODEL') || 'tts-1';
-    this.ttsVoice = this.configService.get<string>('OPENAI_TTS_VOICE') || 'alloy';
+    this.model = this.configService.openaiModel;
+    this.ttsModel = this.configService.openaiTtsModel;
+    this.ttsVoice = this.configService.openaiTtsVoice;
   }
 
   async transcribeAudio(audioPath: string, language: string = 'en'): Promise<any> {
