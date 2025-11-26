@@ -2,19 +2,21 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from './config/config.service';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  const configService = app.get(ConfigService);
+  const configService = app.get(AppConfigService);
+  
+  // Validate configuration
+  configService.validateConfig();
   
   // CORS
-  const corsOrigins = configService.get<string>('CORS_ORIGINS')?.split(',') || ['http://localhost:3000'];
   app.enableCors({
-    origin: corsOrigins,
+    origin: configService.corsOrigins,
     credentials: true,
   });
   
@@ -41,11 +43,19 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
   
-  const port = configService.get<number>('PORT') || 8000;
+  const port = configService.port;
   await app.listen(port);
   
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/docs`);
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('🚀 Pronunciation Trainer API');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`📍 Server:        http://localhost:${port}`);
+  console.log(`📚 Documentation: http://localhost:${port}/docs`);
+  console.log(`🏥 Health Check:  http://localhost:${port}/api/health`);
+  console.log(`🌍 Environment:   ${configService.nodeEnv}`);
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('');
 }
 
 bootstrap();
